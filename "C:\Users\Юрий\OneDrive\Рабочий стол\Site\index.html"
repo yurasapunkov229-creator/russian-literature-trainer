@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Тренажёр — Русский язык и Литература</title>
+  <style>
+    :root{
+      --bg:#0f1724; --card:#0b1220; --muted:#9aa4b2; --accent:#7c5cff; --accent-2:#00d4ff; --glass:rgba(255,255,255,0.04);
+      --radius:18px; --glass-2:rgba(255,255,255,0.02);
+      font-synthesis: none;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:linear-gradient(180deg,#071025 0%, var(--bg) 60%); color:#e6eef8}
+    .app{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px}
+    .wrap{width:100%;max-width:1100px;background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);border-radius:20px;padding:22px;box-shadow:0 10px 30px rgba(2,6,23,0.7);}
+    header{display:flex;align-items:center;gap:18px;margin-bottom:18px}
+    .logo{width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px;color:white;box-shadow:0 6px 22px rgba(124,92,255,0.2)}
+    h1{font-size:20px;margin:0}
+    p.lead{margin:0;color:var(--muted);font-size:13px}
+
+    .grid{display:grid;grid-template-columns:360px 1fr;gap:18px}
+
+    /* sidebar */
+    .panel{background:var(--card);border-radius:14px;padding:16px;min-height:420px}
+    .meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .meta .small{color:var(--muted);font-size:13px}
+    .subjects{display:flex;flex-direction:column;gap:8px}
+    .subject{padding:10px;border-radius:10px;cursor:pointer;background:var(--glass);display:flex;justify-content:space-between;align-items:center}
+    .subject.active{background:linear-gradient(90deg, rgba(124,92,255,0.12), rgba(0,212,255,0.06));box-shadow:inset 0 1px 0 rgba(255,255,255,0.02)}
+    .subject .count{font-size:12px;color:var(--muted)}
+
+    /* main */
+    .card{background:linear-gradient(180deg,var(--card),var(--glass-2));padding:22px;border-radius:14px;min-height:420px;display:flex;flex-direction:column}
+    .toprow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+    .progress{flex:1;margin-right:18px}
+    .progress-bar{height:10px;background:rgba(255,255,255,0.04);border-radius:999px;overflow:hidden}
+    .progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width 400ms ease}
+    .controls{display:flex;gap:8px}
+    button.btn{border:0;padding:10px 14px;border-radius:10px;background:rgba(255,255,255,0.03);color:inherit;cursor:pointer}
+    button.primary{background:linear-gradient(90deg,var(--accent),var(--accent-2));box-shadow:0 8px 26px rgba(124,92,255,0.12);font-weight:600}
+
+    .question-area{flex:1;display:flex;flex-direction:column;gap:12px}
+    .q-head{display:flex;align-items:center;gap:12px}
+    .q-id{min-width:48px;height:48px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);display:flex;align-items:center;justify-content:center;font-weight:700}
+    .q-text{font-size:18px;line-height:1.3}
+
+    .answers{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+    .ans{padding:12px;border-radius:10px;background:rgba(255,255,255,0.02);cursor:pointer;border:1px solid transparent}
+    .ans:hover{transform:translateY(-3px);transition:transform 160ms}
+    .ans.selected{outline:2px solid rgba(124,92,255,0.12);background:linear-gradient(180deg, rgba(124,92,255,0.05), transparent)}
+    .ans.correct{background:linear-gradient(90deg, rgba(24,160,133,0.14), rgba(0,212,255,0.04));border-color:rgba(24,160,133,0.18)}
+    .ans.wrong{background:linear-gradient(90deg, rgba(255,96,96,0.06), transparent);border-color:rgba(255,96,96,0.12)}
+
+    .footer{display:flex;align-items:center;justify-content:space-between;margin-top:12px}
+    .small{font-size:13px;color:var(--muted)}
+
+    /* responsive */
+    @media (max-width:920px){.grid{grid-template-columns:1fr;}.panel{order:2}.card{order:1}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="wrap">
+      <header>
+        <div class="logo">ТЛ</div>
+        <div>
+          <h1>Тренажёр — Русский язык & Литература</h1>
+          <p class="lead">120 вопросов (60 — русский язык, 60 — литература). Вопросы случайно, варианты ответа перемешиваются.</p>
+        </div>
+      </header>
+
+      <div class="grid">
+        <aside class="panel">
+          <div class="meta">
+            <div>
+              <div class="small">Выбранный модуль</div>
+              <strong id="selected-subject">Все темы</strong>
+            </div>
+            <div class="small">Прогресс: <span id="sidebar-progress">0/120</span></div>
+          </div>
+
+          <div class="subjects" id="subjects-list">
+            <!-- динамически -->
+          </div>
+
+          <hr style="border:none;height:1px;background:rgba(255,255,255,0.03);margin:12px 0;border-radius:2px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn" id="btn-reset">Сбросить</button>
+            <button class="btn" id="btn-review">Показать ошибки</button>
+            <button class="btn" id="btn-export">Экспорт JSON</button>
+          </div>
+
+          <p style="color:var(--muted);font-size:13px;margin-top:12px">Подсказка: открывай тест в браузере на телефоне — интерфейс адаптивный. Варианты ответов перемешиваются при каждой новой попытке.</p>
+        </aside>
+
+        <main class="card">
+          <div class="toprow">
+            <div class="progress">
+              <div class="small">Прогресс</div>
+              <div class="progress-bar" aria-hidden>
+                <div class="progress-fill" id="progress-fill"></div>
+              </div>
+            </div>
+            <div class="controls">
+              <div class="small">Тема: <select id="filter-subject"><option value="all">Все</option></select></div>
+              <button class="btn" id="btn-prev">◀ Пред.</button>
+              <button class="btn" id="btn-next">След. ▶</button>
+              <button class="primary" id="btn-submit">Завершить</button>
+            </div>
+          </div>
+
+          <div class="question-area">
+            <div class="q-head">
+              <div class="q-id" id="q-num">1</div>
+              <div class="q-text" id="q-text">Загрузка...</div>
+            </div>
+
+            <div class="answers" id="answers"></div>
+
+            <div class="footer">
+              <div class="small">Вопрос <span id="q-index">0</span> из <span id="q-total">0</span></div>
+              <div class="small">Набрано: <strong id="score">0</strong></div>
+            </div>
+          </div>
+
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // ========= Данные вопросов (120) ===========
+  const QUESTIONS = [
+    /* 60 — Русский язык */
+    {id:1, subject:'Русский язык', q:'Укажите слово, в котором все гласные произносятся одинаково по ударению?', options:['молоко','замок','окно','учебник','доктор'], answer:0},
+    {id:2, subject:'Русский язык', q:'Какой термин обозначает изменение формы слова по родам, числам и падежам?', options:['Словообразование','Спряжение','Изменение','Склонение','Согласование'], answer:3},
+    {id:3, subject:'Русский язык', q:'Выберите предложение с прямой речью.', options:['Он сказал, что придёт позже.','Она спросила, где остановится поезд.','"Я приду завтра", — сказал он.','Он пообещал помочь.','Она знала ответ.'], answer:2},
+    {id:4, subject:'Русский язык', q:'Как называется часть речи, отвечающая на вопросы "кто?" и "что?"?', options:['Глагол','Прилагательное','Существительное','Наречие','Местоимение'], answer:2},
+    {id:5, subject:'Русский язык', q:'Найдите предложение с деепричастным оборотом.', options:['Он, улыбаясь, вошёл в комнату.','Она быстро бежала к двери.','Вечером мы читали книгу.','Он любит музыку.','Мы учимся каждый день.'], answer:0},
+    {id:6, subject:'Русский язык', q:'Какой из знаков препинания ставится перед словом "что" в придаточном предложении?', options:[',',':',';','—','.'], answer:0},
+    {id:7, subject:'Русский язык', q:'Какая лексическая норма связана с употреблением слов в их прямом значении?', options:['Фразеологическая','Лексическая','Стилистическая','Орфоэпическая','Орфографическая'], answer:1},
+    {id:8, subject:'Русский язык', q:'Укажите слово с чередующейся гласной в корне.', options:['гореть','плывёт','везти','покупка','читать'], answer:0},
+    {id:9, subject:'Русский язык', q:'Как называется служебная часть речи, соединяющая слова в предложении?', options:['Междометие','Глагол','Предлог','Наречие','Частица'], answer:2},
+    {id:10, subject:'Русский язык', q:'Выберите слово с приставкой, а не с корнем, содержащим отрицание.', options:['бесконечный','негородской','неприязнь','независимый','бессмысленный'], answer:3},
+    {id:11, subject:'Русский язык', q:'Какой вид сказуемого выражен в: "Он был врачом"?', options:['Простое','Составное именное','Составное глагольное','Неполное','Сложное'], answer:1},
+    {id:12, subject:'Русский язык', q:'Выберите правильное написание: ', options:['безвизовый','безвизовый','бевизовый','без-визовый','безвизовый'], answer:0},
+    {id:13, subject:'Русский язык', q:'Что такое синтаксическая связь слов в предложении?', options:['Фонетическая связь','Морфологическая связь','Грамматическая связь','Лексическая связь','Смысловая связь'], answer:2},
+    {id:14, subject:'Русский язык', q:'Какое слово является местоимением?', options:['каждый','зелёный','лес','идти','но'], answer:0},
+    {id:15, subject:'Русский язык', q:'Выберите слово с уменьшительно-ласкательной формой.', options:['домик','дом','домовой','домашний','домостроение'], answer:0},
+    {id:16, subject:'Русский язык', q:'Какая часть речи обозначает признак предмета?', options:['Существительное','Глагол','Прилагательное','Наречие','Числительное'], answer:2},
+    {id:17, subject:'Русский язык', q:'Какой термин означает порядок слов, характерный для официально-делового стиля?', options:['Инверсный','Нормативный','Номинативный','Параллельный','Сложный'], answer:0},
+    {id:18, subject:'Русский язык', q:'Укажите слово, в котором есть парный согласный звук в конце.', options:['кот','дом','лес','камень','город'], answer:0},
+    {id:19, subject:'Русский язык', q:'Выберите предложение с вводным словом.', options:['К счастью, дождя не было.','Я купил хлеб и молоко.','Она читала книгу и спала.','Они гуляли в парке.','Он написал письмо.'], answer:0},
+    {id:20, subject:'Русский язык', q:'Что такое омонимы?', options:['Слова с противоположным значением','Слова с одинаковым написанием, но разным значением','Слова одной части речи','Слова с одинаковой корневой морфемой','Устаревшие слова'], answer:1},
+    {id:21, subject:'Русский язык', q:'Какой суффикс образует прилагательные: ', options:['-ость','-оват-','-еньк-','-ник-','-тор-'], answer:1},
+    {id:22, subject:'Русский язык', q:'В каком слове ударение падает на третий слог с конца (т. е. на третий слог справа)?', options:['телефОн','университет','квартИра','компьютЕр','матемАтика'], answer:1},
+    {id:23, subject:'Русский язык', q:'Какое слово является междометием?', options:['ура','кот','бежать','зеленый','туда'], answer:0},
+    {id:24, subject:'Русский язык', q:'Что означает термин «лексика»?', options:['Набор правил письма','Совокупность слов языка','Грамматические формы','Порядок слов','Произношение'], answer:1},
+    {id:25, subject:'Русский язык', q:'Как называется словообразовательная модель для слова "учитель"?', options:['Префиксация','Суффиксация','Конверсия','Композиция','Деривация'], answer:1},
+    {id:26, subject:'Русский язык', q:'Укажите предложение с устойчивым выражением (фразеологизмом).', options:['Он попал в яблочко.','Он сидел на стуле.','Она шла по улице.','Они говорили тихо.','Он увидел дом.'], answer:0},
+    {id:27, subject:'Русский язык', q:'Какой термин означает согласование слов по родам и числам?', options:['Супплетивизм','Агглютинация','Согласование','Управление','Связка'], answer:2},
+    {id:28, subject:'Русский язык', q:'Выберите сочетание слов, где управление выражено правильно.', options:['боится воды','жаден к деньгам','стоит дома','смотреть на телевизор','ждать в очередь'], answer:0},
+    {id:29, subject:'Русский язык', q:'Какой вид речи характеризуется эмоциональностью и экспрессивностью?', options:['Научный','Официально-деловой','Публицистический','Художественный','Разговорный'], answer:3},
+    {id:30, subject:'Русский язык', q:'Укажите слово с ненаписанным ударением (слово-исключение).', options:['голОвa','молокО','звонИть','говорИть','печь'], answer:1},
+    {id:31, subject:'Русский язык', q:'Что такое «фонетика»?', options:['Учение о словообразовании','Учение о звуках языка','Учение о значениях слов','Учение о тексте','Учение о стиле'], answer:1},
+    {id:32, subject:'Русский язык', q:'В каком слове допускается написание через дефис?', options:['юго-запад','самолет','все-таки','не-бывальщина','международный'], answer:0},
+    {id:33, subject:'Русский язык', q:'Какой знак ставится при вводном сочетании «без сомнения»?', options:[',',':',';','—','.'], answer:0},
+    {id:34, subject:'Русский язык', q:'Как называется предложение, которое не содержит грамматического основы?', options:['Неполное','Бессоюзное','Сложное','Односоставное','Распространенное'], answer:1},
+    {id:35, subject:'Русский язык', q:'Выберите слово с приставкой "пере-" в значении «снова».', options:['переписать','перевоз','переход','пережить','перетянуть'], answer:0},
+    {id:36, subject:'Русский язык', q:'Что обозначает термин «морфемика»?', options:['Изучение звуков','Изучение значения слов','Изучение морфем (корень, приставка, суффикс)','Изучение текста','Изучение стиля'], answer:2},
+    {id:37, subject:'Русский язык', q:'Какое слово является наречием?', options:['быстро','синий','книга','он','три'], answer:0},
+    {id:38, subject:'Русский язык', q:'Что такое синтаксическая конструкция «прямая речь»?', options:['Цитирование чужих слов дословно','Передача содержания в косвенной форме','Описание действий','Список пунктов','Риторический вопрос'], answer:0},
+    {id:39, subject:'Русский язык', q:'Какой суффикс образует существительные: ', options:['-ение','-ый','-ко','-ить','-ся'], answer:0},
+    {id:40, subject:'Русский язык', q:'Выберите правильное написание слова.', options:['экс-сотрудник','экссотрудник','экс сотрудник','экс-сотрудник','экссотрудник'], answer:0},
+    {id:41, subject:'Русский язык', q:'Какой тип речи используется в научной статье?', options:['Художественный','Разговорный','Публицистический','Научный','Официально-деловой'], answer:3},
+    {id:42, subject:'Русский язык', q:'Что означает термин «аллитерация»?', options:['Повторение согласных звуков','Повторение гласных','Риторический прием','Форма стихотворения','Тип текста'], answer:0},
+    {id:43, subject:'Русский язык', q:'Какой предлог требует родительного падежа?', options:['без','в','на','с','за'], answer:0},
+    {id:44, subject:'Русский язык', q:'Найдите слово с редуцированными гласными в безударной позиции.', options:['голова','молоко','замок','звонок','книга'], answer:0},
+    {id:45, subject:'Русский язык', q:'Как называется связь между словами, выражаемая падежными формами?', options:['Согласование','Управление','Синтаксис','Фонетика','Морфология'], answer:1},
+    {id:46, subject:'Русский язык', q:'Выберите слово, образованное способом суффиксации: ', options:['лесник','подземелье','прибор','высота','заря'], answer:0},
+    {id:47, subject:'Русский язык', q:'Что такое «лексикализация»?', options:['Процесс заимствования слова','Изменение звуковой системы','Процесс образования устойчивого сочетания','Нарушение правил речи','Стилистическая окраска'], answer:0},
+    {id:48, subject:'Русский язык', q:'Какой из союзов является подчинительным?', options:['и','но','что','или','зато'], answer:2},
+    {id:49, subject:'Русский язык', q:'Укажите слово с фонетическим изменением при добавлении суффикса.', options:['сад — садик','дом — домов','луг — лужок','лес — лесной','бег — бегун'], answer:2},
+    {id:50, subject:'Русский язык', q:'Что такое «вставная конструкция» в предложении?', options:['Обособленный член, вводимый автором','Главная часть предложения','Простое предложение','Неполное предложение','Сложное предложение'], answer:0},
+    {id:51, subject:'Русский язык', q:'Какой термин обозначает сокращение слов или фраз (например, «в том числе» → «в т. ч.»)?', options:['Абревиация','Совпадение','Омонимия','Сокращение','Слитность'], answer:0},
+    {id:52, subject:'Русский язык', q:'Какой падеж отвечает на вопрос "кому?" и "чему?"?', options:['Винительный','Творительный','Дательный','Родительный','Предложный'], answer:2},
+    {id:53, subject:'Русский язык', q:'Что такое «конверсия» в словообразовании?', options:['Преобразование одной части речи в другую без суффиксов/приставок','Добавление суффикса','Добавление приставки','Слияние слов','Уменьшение слова'], answer:0},
+    {id:54, subject:'Русский язык', q:'Какой тип предложения выражает повеление?', options:['Побудительное','Повествовательное','Вопросительное','Оценочное','Разделительное'], answer:0},
+    {id:55, subject:'Русский язык', q:'Выберите слово с безударной гласной в приставке.', options:['преобразовать','представить','подписать','переехать','приготовить'], answer:1},
+    {id:56, subject:'Русский язык', q:'Что обозначает термин «стилистическая окраска» слова?', options:['Звуковую форму слова','Эмоциональную или ситуационную окраску','Грамматическую форму','Порядок слов','Правописание'], answer:1},
+    {id:57, subject:'Русский язык', q:'Как называется изменение ударения в однокоренных словах?', options:['Акцентуация','Интонация','Регрессия','Метатеза','Редукция'], answer:0},
+    {id:58, subject:'Русский язык', q:'Что такое «паронимы»?', options:['Слова с одинаковым смыслом','Слова с похожим звучанием и разным значением','Слова одной части речи','Архаизмы','Заимствования'], answer:1},
+    {id:59, subject:'Русский язык', q:'Какой знак ставится между частями сложного предложения при наличии союзов?', options:[',',':',';','—','.'], answer:0},
+    {id:60, subject:'Русский язык', q:'Укажите слово, в котором удвоение согласных сохраняется при изменении формы.', options:['ассортимент','комманда','аддитив','инновация','полло'], answer:0},
+
+    /* 60 — Литература */
+    {id:61, subject:'Литература', q:'К какому направлению относится Александр Пушкин?', options:['Реализм','Классицизм','Романтизм','Модернизм','Барокко'], answer:2},
+    {id:62, subject:'Литература', q:'Кто автор романа «Война и мир»?', options:['Федор Достоевский','Лев Толстой','Иван Тургенев','Николай Гоголь','Александр Пушкин'], answer:1},
+    {id:63, subject:'Литература', q:'Какая форма является основой стихотворной структуры — это?', options:['Катрен','Строфа','Ритм','Рифма','Ямб'], answer:1},
+    {id:64, subject:'Литература', q:'Кто написал трагедию "Ревизор"?', options:['Н.В. Гоголь','А.С. Пушкин','М.Ю. Лермонтов','А.П. Чехов','И.С. Тургенев'], answer:0},
+    {id:65, subject:'Литература', q:'Какая тема центральна в романе "Преступление и наказание"?', options:['Социальная критика','Тема совести и наказания','Описание быта','Путешествие','Политика'], answer:1},
+    {id:66, subject:'Литература', q:'Кто автор стихотворения "Я помню чудное мгновенье"?', options:['А.С. Пушкин','М.Ю. Лермонтов','А.А. Фет','С.А. Есенин','Н.А. Некрасов'], answer:0},
+    {id:67, subject:'Литература', q:'Что такое эпитет в литературе?', options:['Оборот речи, повторяющийся мотив','Художественное определение, придающее свойство','Разговорная вставка','Сюжетное звено','Лексическая норма'], answer:1},
+    {id:68, subject:'Литература', q:'Кто автор повести "Муму"?', options:['Н.В. Гоголь','А.С. Пушкин','И.С. Тургенев','Ф.М. Достоевский','М.Е. Салтыков-Щедрин'], answer:2},
+    {id:69, subject:'Литература', q:'Что означает термин «риторическое обращение»?', options:['Апелляция к чувствам читателя','Прямое обращение к собеседнику','Описание внешности героя','Повествовательная техника','Синтаксическая ошибка'], answer:1},
+    {id:70, subject:'Литература', q:'К какому жанру относится произведение "Анна Каренина"?', options:['Повесть','Роман','Новелла','Поэма','Драма'], answer:1},
+    {id:71, subject:'Литература', q:'Кто написал поэму "Медный всадник"?', options:['А.С. Пушкин','М.Ю. Лермонтов','А.А. Блок','С.А. Есенин','Н.В. Гоголь'], answer:0},
+    {id:72, subject:'Литература', q:'Что такое аллегория?', options:['Прямое описание событий','Иносказательное изображение, символ','Разговорный стиль','Риторический вопрос','Эпиграф'], answer:1},
+    {id:73, subject:'Литература', q:'Кто автор рассказа "Кавказский пленник"?', options:['Л. Толстой','М.Ю. Лермонтов','И.С. Тургенев','Ф.М. Достоевский','Н.В. Гоголь'], answer:1},
+    {id:74, subject:'Литература', q:'Что такое антитеза?', options:['Повторение слова','Противопоставление идей или образов','Метафора','Эпитет','Параллелизм'], answer:1},
+    {id:75, subject:'Литература', q:'Кто написал "Евгений Онегин"?', options:['А.С. Пушкин','И.А. Крылов','М.Ю. Лермонтов','А.П. Чехов','Ф.М. Достоевский'], answer:0},
+    {id:76, subject:'Литература', q:'Какой приём чаще всего использует реализм?', options:['Идеализация действительности','Повествование от первого лица','Детальное изображение действительности','Прорыв воображения','Свободный стих'], answer:2},
+    {id:77, subject:'Литература', q:'Кто автор драматических произведений: "Чайка", "Вишневый сад"?', options:['А.П. Чехов','Н.В. Гоголь','А.С. Пушкин','М. Горький','Ф.М. Достоевский'], answer:0},
+    {id:78, subject:'Литература', q:'Что такое мотив в литературе?', options:['Повторяющаяся тема или элемент произведения','Конкретная глава романа','Авторская биография','Лексическое средство','Грамматическая форма'], answer:0},
+    {id:79, subject:'Литература', q:'Кто автор "Записок из мертвого дома"?', options:['Ф.М. Достоевский','А.С. Пушкин','Л.Н. Толстой','М.Е. Салтыков-Щедрин','А.П. Чехов'], answer:0},
+    {id:80, subject:'Литература', q:'Что такое метонимия?', options:['Замена слова другим на основе смежности понятий','Повтор звукосочетания','Риторический приём','Образное сравнение','Структурный приём'], answer:0},
+    {id:81, subject:'Литература', q:'Кто написал роман "Отцы и дети"?', options:['И.С. Тургенев','Н.В. Гоголь','А.С. Пушкин','Ф.М. Достоевский','Л.Н. Толстой'], answer:0},
+    {id:82, subject:'Литература', q:'Что называют фабулой произведения?', options:['Художественный метод автора','Последовательность событий (сюжет)','Стиль автора','Тематику','Диалоги'], answer:1},
+    {id:83, subject:'Литература', q:'Кто автор поэзии: "Я помню — воспоминание" и др. — романтик?', options:['М.Ю. Лермонтов','А.С. Пушкин','Н.А. Некрасов','А.А. Фет','С.А. Есенин'], answer:0},
+    {id:84, subject:'Литература', q:'Что такое гротеск в литературе?', options:['Прямое, реальное изображение','Комическое и ужасное, преувеличенное сочетание','Меланхоличный настрой','Лаконичный стиль','Документальное описание'], answer:1},
+    {id:85, subject:'Литература', q:'Кто автор рассказа "Шинель"?', options:['Н.В. Гоголь','И.С. Тургенев','Ф.М. Достоевский','А.С. Пушкин','М. Горький'], answer:0},
+    {id:86, subject:'Литература', q:'Что такое литота?', options:['Превознесение достоинств','Уменьшение значения или преуменьшение','Прямая речь','Символ','Образ'], answer:1},
+    {id:87, subject:'Литература', q:'Кто автор "Мцыри"?', options:['М.Ю. Лермонтов','А.С. Пушкин','И.А. Крылов','Н.В. Гоголь','Ф.М. Достоевский'], answer:0},
+    {id:88, subject:'Литература', q:'Что изучает литературоведение?', options:['Правила правописания','Историю и теорию литературы','Фонетику языка','Биологию автора','Типографику'], answer:1},
+    {id:89, subject:'Литература', q:'Кто автор рассказа "Кому на Руси жить хорошо"?', options:['Н.А. Некрасов','М.Е. Салтыков-Щедрин','И.С. Тургенев','А.И. Куприн','Ф.М. Достоевский'], answer:0},
+    {id:90, subject:'Литература', q:'Что такое речевой образ героя?', options:['Словарный запас автора','Манера речи персонажа, его речевые особенности','Структура сюжета','Тематика произведения','Авторская позиция'], answer:1},
+    {id:91, subject:'Литература', q:'Кто написал драму "Гроза"?', options:['А.Н. Островский','А.П. Чехов','Н.В. Гоголь','Л.Н. Толстой','Ф.М. Достоевский'], answer:0},
+    {id:92, subject:'Литература', q:'Что такое символ в литературе?', options:['Прямое название предмета','Знак или образ, имеющий дополнительное значение','Намеренно ошибочная форма слова','Один из персонажей','Риторический приём'], answer:1},
+    {id:93, subject:'Литература', q:'Кто автор прозы "Обломов"?', options:['И.А. Гончаров','А.С. Пушкин','М.Ю. Лермонтов','Ф.М. Достоевский','Н.В. Гоголь'], answer:0},
+    {id:94, subject:'Литература', q:'Что такое интертекстуальность?', options:['Ссылка на другие тексты внутри произведения','Однообразие стиля','Повтор героя','Сюжет без диалогов','Неполнота сюжета'], answer:0},
+    {id:95, subject:'Литература', q:'Кто написал "Обрыв"?', options:['И.А. Гончаров','И.С. Тургенев','А.П. Чехов','М. Горький','Н.В. Гоголь'], answer:0},
+    {id:96, subject:'Литература', q:'Что такое хорей и ямб?', options:['Типы прозы','Ритмические размеры стихотворной речи','Жанры прозы','Речевые клише','Стили повествования'], answer:1},
+    {id:97, subject:'Литература', q:'Кто является автором «Записок охотника»?', options:['И.С. Тургенев','А.С. Пушкин','М. Горький','Н.В. Гоголь','Ф.М. Достоевский'], answer:0},
+    {id:98, subject:'Литература', q:'Что такое хронотоп?', options:['Временное и пространственное единство произведения','Структура предложения','Название главы','Смысловой центр'], answer:0},
+    {id:99, subject:'Литература', q:'Кто написал "Питерские повести"?', options:['В. В. Набоков','Ф.М. Достоевский','А.П. Чехов','И.С. Тургенев','Н.В. Гоголь'], answer:2},
+    {id:100, subject:'Литература', q:'Что такое парадигма в литературе?', options:['Последовательность сцен','Набор сопоставимых образов или форм','Тип рифмы','Метка главы','Авторская ремарка'], answer:1},
+    {id:101, subject:'Литература', q:'Кто написал "Белую гвардию"?', options:['М.А. Булгаков','А.И. Куприн','И.А. Гончаров','М. Горький','А.П. Чехов'], answer:0},
+    {id:102, subject:'Литература', q:'Что такое монолог в драме?', options:['Разговор двух персонажей','Речь одного персонажа, адресованная самому себе или другим','Описательная деталь','Рефрен','Эпиграф'], answer:1},
+    {id:103, subject:'Литература', q:'Кто автор "Дядя Ваня"?', options:['А.П. Чехов','Н.В. Гоголь','А.С. Пушкин','М. Горький','И.С. Тургенев'], answer:0},
+    {id:104, subject:'Литература', q:'Что такое гротескное преувеличение?', options:['Уменьшение значения','Невнятное описание','Комическое или ужасное искаженное изображение действительности','Тип рифмы','Риторический вопрос'], answer:2},
+    {id:105, subject:'Литература', q:'Кто написал "Собачье сердце"?', options:['М.А. Булгаков','А.П. Чехов','Ф.М. Достоевский','Л.Н. Толстой','И.С. Тургенев'], answer:0},
+    {id:106, subject:'Литература', q:'Что обозначает термин «канонический текст»?', options:['Текст, запрещённый цензурой','Текст, признанный классикой и образцовым','Любой современный текст','Текст без сюжета','Технический документ'], answer:1},
+    {id:107, subject:'Литература', q:'Кто написал "Палата №6"?', options:['А.П. Чехов','Н.В. Гоголь','Ф.М. Достоевский','А.С. Пушкин','Л.Н. Толстой'], answer:0},
+    {id:108, subject:'Литература', q:'Что такое ретроспектива в сюжете?', options:['Переход в будущее','Возврат к прошлым событиям (воспоминание)','Одновременное повествование','Отсутствие диалогов','Нарратив от третьего лица'], answer:1},
+    {id:109, subject:'Литература', q:'Кто автор "Маленького принца" (перевод и обсуждение в школах)?', options:['Антуан де Сент-Экзюпери','Жюль Верн','Оскар Уайльд','Марк Твен','Лев Толстой'], answer:0},
+    {id:110, subject:'Литература', q:'Что такое фабула?', options:['Событийная канва произведения (сюжетная линия)','Авторская биография','Художественный метод','Риторический приём','Жанр произведения'], answer:0},
+    {id:111, subject:'Литература', q:'Кто написал "Тихий Дон"?', options:['М.А. Шолохов','И.А. Гончаров','Ф.М. Достоевский','А.П. Чехов','В.В. Набоков'], answer:0},
+    {id:112, subject:'Литература', q:'Что такое образ-символ?', options:['Описание природного явления','Образ, который кроме прямого значения имеет скрытое смысловое значение','Тип рифмы','Авторская ремарка','Стилистическая метка'], answer:1},
+    {id:113, subject:'Литература', q:'Кто автор "Мастер и Маргарита"?', options:['М.А. Булгаков','А.П. Чехов','Ф.М. Достоевский','А.С. Пушкин','И.С. Тургенев'], answer:0},
+    {id:114, subject:'Литература', q:'Что такое жанр «новелла»?', options:['Длинный эпический роман','Краткое прозаическое произведение с напряжённым сюжетом','Стихотворение','Драматическое произведение','Научная статья'], answer:1},
+    {id:115, subject:'Литература', q:'Кто автор "Пиковая дама"?', options:['А.С. Пушкин','И.С. Тургенев','Н.В. Гоголь','М. Горький','Ф.М. Достоевский'], answer:0},
+    {id:116, subject:'Литература', q:'Что такое лирическое отступление?', options:['Ретроспекция','Авторская эмоциональная вставка в повествование','Список персонажей','Персонаж-нарратив','Сцена действия'], answer:1},
+    {id:117, subject:'Литература', q:'Кто написал "Белая гвардия"?', options:['М.А. Булгаков','М. Горький','А.П. Чехов','И.С. Тургенев','Ф.М. Достоевский'], answer:0},
+    {id:118, subject:'Литература', q:'Что называют эпиграфом?', options:['Цитату перед началом произведения','Главу романа','Сюжетный поворот','Речевой оборот','Тип метафоры'], answer:0},
+    {id:119, subject:'Литература', q:'Кто автор "Повести о том, как один мужик двух генералов кормил"?', options:['М.Е. Салтыков-Щедрин','И.С. Тургенев','А.С. Пушкин','Н.В. Гоголь','Ф.М. Достоевский'], answer:0},
+    {id:120, subject:'Литература', q:'Что такое «лирический герой»?', options:['Автор текста','Персонаж, выражающий личное эмоциональное состояние автора или лирическое «я»','Художественный приём','Жанр','Категория стихосложения'], answer:1}
+  ];
+
+  // ========= Приложение ===========
+  let state = {
+    allQuestions: QUESTIONS.slice(),
+    pool: [],
+    index:0,
+    score:0,
+    answers: {}, // id -> chosenIndex
+    filter:'all',
+    reviewMode:false
+  };
+
+  // utilities
+  function shuffle(arr){
+    for(let i=arr.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];
+    }
+    return arr;
+  }
+
+  // build subject list
+  const subjects = Array.from(new Set(QUESTIONS.map(q=>q.subject)));
+  const subjectsList = document.getElementById('subjects-list');
+  const filterSelect = document.getElementById('filter-subject');
+  subjects.forEach(s=>{const el=document.createElement('div');el.className='subject active';el.innerHTML=`<div>${s}</div><div class="count">${QUESTIONS.filter(q=>q.subject===s).length}</div>`;el.onclick=()=>{filterSelect.value=s; applyFilter(s);};subjectsList.appendChild(el);const opt=document.createElement('option');opt.value=s;opt.textContent=s;filterSelect.appendChild(opt);});
+
+  // initialize pool
+  function buildPool(){
+    const pool = (state.filter==='all') ? QUESTIONS.slice() : QUESTIONS.filter(q=>q.subject===state.filter);
+    // randomize question order
+    state.pool = shuffle(pool.map(q=>({...q, options: q.options.slice()})));
+    // shuffle options per question
+    state.pool.forEach(q=>{ q._map = q.options.map((o,i)=>i); q._shuffled = shuffle(q._map.slice()); });
+    state.index=0;state.score=0;state.answers={}; state.reviewMode=false;
+    updateUI();
+  }
+
+  function applyFilter(sub){ state.filter = sub; document.getElementById('selected-subject').textContent = sub==='all'? 'Все темы' : sub; buildPool(); updateSidebarProgress(); }
+
+  // render question
+  function render(){
+    const qTotal = state.pool.length; document.getElementById('q-total').textContent = qTotal;
+    if(qTotal===0){ document.getElementById('q-text').textContent='Нет вопросов в выбранной теме'; document.getElementById('answers').innerHTML=''; return; }
+    const obj = state.pool[state.index]; document.getElementById('q-num').textContent = state.index+1; document.getElementById('q-text').textContent = obj.q; document.getElementById('q-index').textContent = state.index+1;
+    const answersDiv = document.getElementById('answers'); answersDiv.innerHTML='';
+    // prepare displayed options order
+    const order = obj._shuffled;
+    order.forEach((origIndex,i)=>{
+      const btn = document.createElement('div'); btn.className='ans'; btn.tabIndex=0; btn.innerHTML = `<div style="font-weight:600">${String.fromCharCode(65+i)}.</div><div style="margin-left:6px">${obj.options[origIndex]}</div>`;
+      // mark selected
+      const chosen = state.answers[obj.id]; if(typeof chosen!=='undefined' && chosen===origIndex) btn.classList.add('selected');
+      // if review mode, mark correct/wrong
+      if(state.reviewMode){ if(origIndex===obj.answer) btn.classList.add('correct'); if(typeof chosen!=='undefined' && chosen===origIndex && chosen!==obj.answer) btn.classList.add('wrong'); }
+      btn.onclick = ()=>{
+        if(state.reviewMode) return; // don't change in review
+        state.answers[obj.id]=origIndex; // store original index
+        updateScore(); render(); updateSidebarProgress();
+      };
+      answersDiv.appendChild(btn);
+    });
+    updateProgressBar(); document.getElementById('score').textContent = state.score;
+  }
+
+  function updateScore(){
+    let s=0; for(const q of state.pool){ const chosen = state.answers[q.id]; if(typeof chosen!=='undefined' && chosen===q.answer) s++; }
+    state.score = s;
+  }
+
+  function updateProgressBar(){ const total=state.pool.length; const answered = Object.keys(state.answers).length; const perc = total? Math.round(answered/total*100):0; document.getElementById('progress-fill').style.width = perc+'%'; }
+
+  function updateUI(){ render(); updateSidebarProgress(); }
+
+  function updateSidebarProgress(){ document.getElementById('sidebar-progress').textContent = `${state.score}/${state.pool.length}` }
+
+  // navigation
+  document.getElementById('btn-next').onclick = ()=>{ if(state.index < state.pool.length-1){ state.index++; render(); } }
+  document.getElementById('btn-prev').onclick = ()=>{ if(state.index>0){ state.index--; render(); } }
+
+  document.getElementById('btn-reset').onclick = ()=>{ if(confirm('Сбросить прогресс и перемешать вопросы?')) buildPool(); }
+  document.getElementById('btn-review').onclick = ()=>{ state.reviewMode=true; render(); }
+  document.getElementById('btn-export').onclick = ()=>{ const data = JSON.stringify(state.pool.map(q=>({id:q.id,subject:q.subject,q:q.q,options:q.options,answer:q.answer})), null, 2); const blob = new Blob([data],{type:'application/json'}); const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='questions_export.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); }
+
+  document.getElementById('btn-submit').onclick = ()=>{
+    updateScore(); state.reviewMode=true; render(); alert(`Тест завершён. Правильных ответов: ${state.score} из ${state.pool.length}`);
+  }
+
+  filterSelect.onchange = (e)=>{ applyFilter(e.target.value); }
+
+  // initial build
+  applyFilter('all');
+  // small UX: keyboard navigation
+  window.addEventListener('keydown',(e)=>{
+    if(e.key==='ArrowRight') document.getElementById('btn-next').click();
+    if(e.key==='ArrowLeft') document.getElementById('btn-prev').click();
+  });
+
+  </script>
+</body>
+</html>
